@@ -99,6 +99,7 @@ detailed_data longtext,
 contract enum('Active', 'Inactive') not null,
 depts set('a','b','c','d','e','f') not null
 );
+alter table stringtable modify column depts set('a','b','c','d','e','f');
 desc stringtable;
 insert into stringtable(id, regnum, name, current_projects, review, detailed_data, contract, depts) values
 (1, 'REG-00000000001', 'Liam Smith', 'Project Alpha, Project Gamma', 'Highly efficient team player.', 'Detailed performance logs and onboarding documentation complete.', 'Active', 'a,c'),
@@ -141,5 +142,93 @@ insert into stringtable(id, regnum, name, current_projects, review, detailed_dat
 (38, 'REG-00000000038', 'Madison Nguyen', 'Project Zeta', 'Maintains consistent delivery velocity.', 'Sprint performance tracking charts and delivery milestone logs.', 'Inactive', 'e,f'),
 (39, 'REG-00000000039', 'Joseph Hill', 'Project Alpha, Project Beta', 'Excellent containerization practices.', 'Docker configuration tracking logs and Kubernetes deployment history details.', 'Active', 'a,c,d,f'),
 (40, 'REG-00000000040', 'Chloe Flores', 'Project Gamma', 'Strong knowledge of NoSQL structures.', 'Database migration schema maps and architectural transformation documents.', 'Active', 'b,d,e');
+insert into stringtable(id, regnum, name, current_projects, review, detailed_data, contract, depts) values
+(41, 'REG-00000000041', 'Chloed Dolores', 'Project Gamma', 'Strong knowledge of NoSQL structures.', 'Database migration schema maps and architectural transformation documents.', 'Inactive', null);
 
 select * from stringtable;
+
+
+-- ==============================================================================================
+-- SQL DATE & TIME DATA TYPES QUICK REVISION NOTES
+-- ==============================================================================================
+
+-- DATE:        Takes 3 bytes. Stores date values from '1000-01-01' to '9999-12-31'. Ideal for dates without times (e.g., '2025-01-01').
+-- DATETIME:    Takes 8 bytes. Stores date and time from '1000-01-01 00:00:00' to '9999-12-31 23:59:59'. Timezone-independent (e.g., '2025-01-08 12:00:00').
+-- TIMESTAMP:   Takes 4 bytes. UTC-based timezone-dependent timestamp from '1970-01-01 00:00:01' UTC to '2038-01-19 03:14:07' UTC (e.g., '2025-01-08 12:00:00').
+-- TIME:        Takes 3 bytes. Stores time values or intervals ranging from '-838:59:59' to '838:59:59' (e.g., '12:34:56').
+-- YEAR:        Takes 1 byte. Stores year values from '1901' to '2155' (e.g., '2025').
+
+-- ==============================================================================================
+-- GUIDELINES FOR ADDING AND MODIFYING NULLABLE / NOT NULL COLUMNS
+-- ==============================================================================================
+-- PHASE 1: Adding new columns. Always start with NULL allowed if the table already contains data. 
+--          Adding a NOT NULL column directly to an existing table with rows will cause an error 
+--          unless a default value is specified, as SQL won't know what to put in the existing rows.
+
+alter table stringtable add column birth date;
+alter table stringtable add column joining datetime;
+alter table stringtable add column leaving timestamp;
+alter table stringtable add column best_performing_year year;
+
+-- ----------------------------------------------------------------------------------------------
+-- PHASE 2: Data Backfilling (Crucial Step)
+--          Before enforcing NOT NULL, you MUST update any existing NULL values in these columns
+--          to a valid date/time. If any row contains a NULL, the ALTER TABLE MODIFY statement 
+--          in Phase 3 will fail.
+--
+-- Example Backfill:
+-- UPDATE stringtable SET birth = '2000-01-01' WHERE birth IS NULL;
+-- ----------------------------------------------------------------------------------------------
+
+-- PHASE 3: Enforcing NOT NULL. Once all existing rows have valid data, safely apply the constraint.
+alter table stringtable modify column birth date not null;
+alter table stringtable modify column joining datetime not null;
+
+UPDATE stringtable SET
+    birth = CASE id
+        WHEN 1 THEN '1990-05-14' WHEN 2 THEN '1985-08-22' WHEN 3 THEN '1993-11-02' WHEN 4 THEN '1988-01-30'
+        WHEN 5 THEN '1995-07-19' WHEN 6 THEN '1991-03-11' WHEN 7 THEN '1982-12-05' WHEN 8 THEN '1994-09-25'
+        WHEN 9 THEN '1987-04-17' WHEN 10 THEN '1992-06-08' WHEN 11 THEN '1989-10-14' WHEN 12 THEN '1996-02-23'
+        WHEN 13 THEN '1984-11-11' WHEN 14 THEN '1993-05-29' WHEN 15 THEN '1990-08-04' WHEN 16 THEN '1997-01-15'
+        WHEN 17 THEN '1983-03-21' WHEN 18 THEN '1995-12-12' WHEN 19 THEN '1986-07-07' WHEN 20 THEN '1998-09-02'
+        WHEN 21 THEN '1991-04-26' WHEN 22 THEN '1988-10-09' WHEN 23 THEN '1994-02-14' WHEN 24 THEN '1992-11-30'
+        WHEN 25 THEN '1985-05-03' WHEN 26 THEN '1996-06-18' WHEN 27 THEN '1989-01-22' WHEN 28 THEN '1993-07-11'
+        WHEN 29 THEN '1981-08-15' WHEN 30 THEN '2000-03-05' WHEN 31 THEN '1990-10-28' WHEN 32 THEN '1995-04-01'
+        WHEN 33 THEN '1987-12-19' WHEN 34 THEN '1992-02-27' WHEN 35 THEN '1986-09-14' WHEN 36 THEN '1997-11-08'
+        WHEN 37 THEN '1983-06-25' WHEN 38 THEN '1999-05-17' WHEN 39 THEN '1991-01-09' WHEN 40 THEN '2002-10-12'
+    END,
+    joining = CASE id
+        WHEN 1 THEN '2020-03-15 09:00:00' WHEN 2 THEN '2015-06-01 08:30:00' WHEN 3 THEN '2021-01-10 10:00:00' WHEN 4 THEN '2018-11-23 09:15:00'
+        WHEN 5 THEN '2022-07-14 09:00:00' WHEN 6 THEN '2019-05-19 08:45:00' WHEN 7 THEN '2012-08-01 09:00:00' WHEN 8 THEN '2020-10-05 09:30:00'
+        WHEN 9 THEN '2017-02-14 09:00:00' WHEN 10 THEN '2021-05-17 08:30:00' WHEN 11 THEN '2018-04-01 09:00:00' WHEN 12 THEN '2023-11-01 10:00:00'
+        WHEN 13 THEN '2014-09-15 09:00:00' WHEN 14 THEN '2021-08-20 09:15:00' WHEN 15 THEN '2019-12-01 08:45:00' WHEN 16 THEN '2024-02-10 09:00:00'
+        WHEN 17 THEN '2013-05-05 09:00:00' WHEN 18 THEN '2022-03-01 09:30:00' WHEN 19 THEN '2016-11-15 08:30:00' WHEN 20 THEN '2023-06-18 10:00:00'
+        WHEN 21 THEN '2020-08-24 09:00:00' WHEN 22 THEN '2018-01-10 09:15:00' WHEN 23 THEN '2022-01-15 09:00:00' WHEN 24 THEN '2021-10-01 08:45:00'
+        WHEN 25 THEN '2015-04-20 09:00:00' WHEN 26 THEN '2023-05-12 09:30:00' WHEN 27 THEN '2017-09-01 09:00:00' WHEN 28 THEN '2021-03-14 08:30:00'
+        WHEN 29 THEN '2011-06-01 09:00:00' WHEN 30 THEN '2025-01-06 10:00:00' WHEN 31 THEN '2019-10-15 09:15:00' WHEN 32 THEN '2022-09-20 08:45:00'
+        WHEN 33 THEN '2017-05-01 09:00:00' WHEN 34 THEN '2021-04-11 09:30:00' WHEN 35 THEN '2016-07-18 09:00:00' WHEN 36 THEN '2024-05-01 08:30:00'
+        WHEN 37 THEN '2013-10-10 09:00:00' WHEN 38 THEN '2023-08-15 10:00:00' WHEN 39 THEN '2020-01-15 09:15:00' WHEN 40 THEN '2025-03-01 09:00:00'
+    END,
+    leaving = CASE id
+        WHEN 2 THEN '2024-12-31 17:00:00' WHEN 5 THEN '2025-05-15 17:00:00' WHEN 8 THEN '2023-11-30 16:30:00' WHEN 11 THEN '2022-06-15 17:00:00'
+        WHEN 14 THEN '2024-01-15 17:00:00' WHEN 17 THEN '2021-09-30 18:00:00' WHEN 20 THEN '2025-08-01 17:00:00' WHEN 23 THEN '2024-04-30 16:45:00'
+        WHEN 26 THEN '2025-02-28 17:00:00' WHEN 29 THEN '2020-05-31 17:00:00' WHEN 32 THEN '2024-10-15 17:00:00' WHEN 35 THEN '2023-03-31 17:00:00'
+        WHEN 38 THEN '2025-11-14 16:30:00'
+        ELSE NULL -- Keeps active employees set to NULL natively
+    END,
+    best_performing_year = CASE id
+        WHEN 1 THEN 2022 WHEN 2 THEN 2018 WHEN 3 THEN 2023 WHEN 4 THEN 2021
+        WHEN 5 THEN 2023 WHEN 6 THEN 2022 WHEN 7 THEN 2015 WHEN 8 THEN 2022
+        WHEN 9 THEN 2019 WHEN 10 THEN 2023 WHEN 11 THEN 2020 WHEN 12 THEN 2024
+        WHEN 13 THEN 2017 WHEN 14 THEN 2022 WHEN 15 THEN 2021 WHEN 16 THEN 2025
+        WHEN 17 THEN 2016 WHEN 18 THEN 2024 WHEN 19 THEN 2018 WHEN 20 THEN 2024
+        WHEN 21 THEN 2022 WHEN 22 THEN 2020 WHEN 23 THEN 2023 WHEN 24 THEN 2023
+        WHEN 25 THEN 2018 WHEN 26 THEN 2024 WHEN 27 THEN 2020 WHEN 28 THEN 2022
+        WHEN 29 THEN 2015 WHEN 30 THEN 2025 WHEN 31 THEN 2021 WHEN 32 THEN 2023
+        WHEN 33 THEN 2019 WHEN 34 THEN 2023 WHEN 35 THEN 2019 WHEN 36 THEN 2025
+        WHEN 37 THEN 2017 WHEN 38 THEN 2024 WHEN 39 THEN 2022 WHEN 40 THEN 2025
+    END
+WHERE id BETWEEN 1 AND 40;
+
+select * from stringtable;
+drop table stringtable;
